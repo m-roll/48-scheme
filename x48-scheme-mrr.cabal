@@ -62,16 +62,18 @@ executable x48-scheme-mrr
     main-is:          Main.hs
 
     -- Modules included in this executable, other than Main.
-    -- other-modules:
+    other-modules:	Ast
+    
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
 
     -- Other library packages from which modules are imported.
-    build-depends:    base ^>=4.16.4.0
+    build-depends:    base ^>=4.16.4.0,
+                      parsec ^>=3.1.16.0
 
     -- Directories containing source files.
-    hs-source-dirs:   app
+    hs-source-dirs:   app, app/parse
 
     -- Base language which the package is written in.
     default-language: GHC2021

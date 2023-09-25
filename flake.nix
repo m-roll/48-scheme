@@ -9,6 +9,7 @@
 	  git # need this or cabal may fail. annoying.
 	  cabal-install
 	  cabal2nix
+	  haskell-language-server
 	];
       };
   };
