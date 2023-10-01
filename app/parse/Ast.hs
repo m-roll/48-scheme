@@ -140,9 +140,6 @@ liftReadS :: ReadS a -> String -> Parser a
 liftReadS reader = maybe (unexpected "no parse") (return . fst) .
                    find (null . snd) . reader
 
-
--- TODO: Possibly worth abstracting parse*Number since they are all pretty much the same.
--- TODO: Pull out char sets for int representations into constants?
 parseBinaryNumber :: Parser Integer
 parseBinaryNumber = do
   _ <- string' "#b"
