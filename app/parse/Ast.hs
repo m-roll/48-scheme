@@ -16,6 +16,7 @@ data LispVal = Atom String
  | Bool Bool
  | Char Char
  | Float Float
+ | Vector [LispVal] -- TODO: this should be constant time access, not a list.
 
 -- https://conservatory.scheme.org/schemers/Documents/Standards/R5RS/HTML/r5rs-Z-H-9.html#%_sec_6.3.4
 -- TODO: handle special cases:
@@ -23,25 +24,48 @@ data LispVal = Atom String
 --   #\newline
 
 parseLists :: Parser LispVal
-parseLists = parentheses (try parseList <|> parseDottedList)
+parseLists = parentheses (do
+  es <- parseExprSeq
+  option (List es) parseDottedListPostfix <&> DottedList es)
+
+parseDottedListPostfix :: Parser LispVal
+parseDottedListPostfix = char '.' >> spaces >>  parseExpr
 
 parentheses :: Parser a -> Parser a
 parentheses = between (char '(') (char ')')
 
-parseList :: Parser LispVal
-parseList =  List <$> sepBy parseExpr spaces
+parseExprSeq :: Parser [LispVal]
+parseExprSeq = sepEndBy parseExpr spaces
 
-parseDottedList :: Parser LispVal
-parseDottedList = do
-  head' <- endBy parseExpr spaces
-  tail' <- char '.' >> spaces >> parseExpr
-  return $ DottedList head' tail'
+parseVector :: Parser LispVal
+parseVector = do
+  _ <- char '#'
+  Vector <$> parentheses (sepBy parseExpr spaces)
 
 parseQuoted :: Parser LispVal
 parseQuoted = do
   _ <- char '\''
   x <- parseExpr
   return $ List [Atom "quote", x]
+
+parseQuasiQuoted :: Parser LispVal 
+parseQuasiQuoted = do
+  _ <- char '`'
+  x <- parseExpr -- technically, should not be an <expression> but a  <qq template>
+  return $ List [Atom "quasiquote", x]
+
+parseUnquoted :: Parser LispVal
+parseUnquoted = do
+  _ <- char ','
+  x <- parseExpr
+  return $ List [Atom "unquote", x]
+
+parseUnquoteSplicing :: Parser LispVal
+parseUnquoteSplicing = do
+  _ <- char ','
+  _ <- char '@'
+  x <- parseExpr
+  return $ List [Atom "unquote-splicing", x]
 
 parseChar :: Parser LispVal
 parseChar = do
@@ -86,7 +110,7 @@ parseAtom = do
 -- TODO support the full number tower, or look up how to do it. I'm confused here.
 
 parseNumber :: Parser LispVal
-parseNumber = parseInteger <|> try parseFloats -- use try since . also used by dotted list, for backtracking
+parseNumber = parseInteger <|> parseFloats -- use try since . also used by dotted list, for backtracking
 
 -- TODO: support s/f/d/l floats
 -- s = short
@@ -97,9 +121,9 @@ parseNumber = parseInteger <|> try parseFloats -- use try since . also used by d
 -- TODO: This only handles x.xxx style inexact floats rn.
 parseFloats :: Parser LispVal
 parseFloats = do 
-  preDecimal <- many digit
+  preDecimal <- many1 digit
   decimal <- char '.'
-  postDecimal <- many digit
+  postDecimal <- many1 digit
   -- technically, out of spec of R5RS. Unmarked floats should default to Double precision or higher.
   float <- liftReadS readFloat (preDecimal ++ decimal : postDecimal)
   return . Float $ float
@@ -151,12 +175,15 @@ parseExpr = parseAtom
   <|> parseNumber
   <|> parseChar
   <|> parseQuoted
+  <|> parseQuasiQuoted
+  <|> parseUnquoted
+  <|> parseUnquoteSplicing
   <|> parseLists
+  <|> parseVector
 
 symbol :: Parser Char
 symbol = oneOf "!#$%&|*+-/:<=>?@^_~"
 
--- TODO: do i need this?
 spaces :: Parser ()
 spaces = skipMany1 space
 
