@@ -1,23 +1,13 @@
-module Ast (LispVal(Atom, List, DottedList, Number, String, Bool, Char, Float), parseExpr)
+module Ast (parseExpr)
 where
 
+import Ast.Type
 import Text.Parsec.Char hiding (spaces)
-import           Control.Monad()
-import           Numeric
+import Text.ParserCombinators.Parsec hiding (spaces)
+import Control.Monad()
 import Data.Functor
 import Data.List
-import           Text.ParserCombinators.Parsec hiding (spaces)
-
-data LispVal = Atom String
- | List [LispVal]
- | DottedList [LispVal] LispVal
- | Number Integer
- | String String
- | Bool Bool
- | Char Char
- | Float Float
- | Vector [LispVal] -- TODO: this should be constant time access, not a list.
-
+import Numeric
 -- https://conservatory.scheme.org/schemers/Documents/Standards/R5RS/HTML/r5rs-Z-H-9.html#%_sec_6.3.4
 -- TODO: handle special cases:
 --   #\space
@@ -183,4 +173,3 @@ symbol = oneOf "!#$%&|*+-/:<=>?@^_~"
 
 spaces :: Parser ()
 spaces = skipMany1 space
-
