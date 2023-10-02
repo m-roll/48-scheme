@@ -1,13 +1,14 @@
-module Ast (parseExpr)
+module Ast (parseExpr, Show, Ast.Type.LispVal)
 where
 
 import Ast.Type
-import Text.Parsec.Char hiding (spaces)
-import Text.ParserCombinators.Parsec hiding (spaces)
+import Ast.Instance()
 import Control.Monad()
 import Data.Functor
 import Data.List
 import Numeric
+import Text.Parsec.Char hiding (spaces)
+import Text.ParserCombinators.Parsec hiding (spaces)
 -- https://conservatory.scheme.org/schemers/Documents/Standards/R5RS/HTML/r5rs-Z-H-9.html#%_sec_6.3.4
 -- TODO: handle special cases:
 --   #\space
