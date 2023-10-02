@@ -1,8 +1,6 @@
 module Ast.Type (LispVal(Atom, List, DottedList, Number, String, Bool, Char, Float, Vector))
 where
 
-import           Control.Monad()
-
 data LispVal = Atom String
  | List [LispVal]
  | DottedList [LispVal] LispVal
