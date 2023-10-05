@@ -67,6 +67,7 @@ executable x48-scheme-mrr
                         Ast.Type
                         Ast.Instance.Show
                         Ast.Print
+                        Eval
     
 
     -- LANGUAGE extensions used by modules in this package.

@@ -2,14 +2,13 @@ import           Control.Monad()
 import           System.Environment
 import           Text.ParserCombinators.Parsec hiding (spaces)
 import Ast
+import Eval
 
 main :: IO ()
-main = do
-  (expr:_) <- getArgs
-  putStrLn (readExpr expr)
+main = getArgs >>= print . eval . readExpr . head
 
-readExpr :: String -> String
+readExpr :: String -> LispVal
 readExpr input = case parse parseExpr "lisp" input of
-  Left err  -> "No match: " ++ show err
-  Right val -> "Found " ++ show val
+  Left err  -> String $ "No match: " ++ show err
+  Right val -> val
 

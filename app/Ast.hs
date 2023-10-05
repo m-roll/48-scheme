@@ -1,4 +1,4 @@
-module Ast (parseExpr, Show, Ast.Type.LispVal)
+module Ast (parseExpr, Show, module Ast.Type)
 where
 
 import Ast.Type
