@@ -17,7 +17,7 @@ import Text.ParserCombinators.Parsec hiding (spaces)
 parseLists :: Parser LispVal
 parseLists = parentheses (do
   es <- parseExprSeq
-  option (List es) parseDottedListPostfix <&> DottedList es)
+  option (List es) (parseDottedListPostfix <&> DottedList es))
 
 parseDottedListPostfix :: Parser LispVal
 parseDottedListPostfix = char '.' >> spaces >>  parseExpr
