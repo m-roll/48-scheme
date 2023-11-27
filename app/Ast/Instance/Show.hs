@@ -1,7 +1,6 @@
-module Ast.Instance.Show
-where
+module Ast.Instance.Show where
 
-import Ast.Type
 import Ast.Print
+import Ast.Type
 
 instance Show LispVal where show = showVal

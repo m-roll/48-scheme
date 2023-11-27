@@ -1,26 +1,29 @@
-module Ast (parseExpr, Show, module Ast.Type)
-where
+module Ast (parseExpr, Show, module Ast.Type) where
 
+import Ast.Instance ()
 import Ast.Type
-import Ast.Instance()
-import Control.Monad()
+import Control.Monad ()
 import Data.Functor
 import Data.List
 import Numeric
 import Text.Parsec.Char hiding (spaces)
 import Text.ParserCombinators.Parsec hiding (spaces)
+
 -- https://conservatory.scheme.org/schemers/Documents/Standards/R5RS/HTML/r5rs-Z-H-9.html#%_sec_6.3.4
 -- TODO: handle special cases:
 --   #\space
 --   #\newline
 
 parseLists :: Parser LispVal
-parseLists = parentheses (do
-  es <- parseExprSeq
-  option (List es) (parseDottedListPostfix <&> DottedList es))
+parseLists =
+  parentheses
+    ( do
+        es <- parseExprSeq
+        option (List es) (parseDottedListPostfix <&> DottedList es)
+    )
 
 parseDottedListPostfix :: Parser LispVal
-parseDottedListPostfix = char '.' >> spaces >>  parseExpr
+parseDottedListPostfix = char '.' >> spaces >> parseExpr
 
 parentheses :: Parser a -> Parser a
 parentheses = between (char '(') (char ')')
@@ -39,7 +42,7 @@ parseQuoted = do
   x <- parseExpr
   return $ List [Atom "quote", x]
 
-parseQuasiQuoted :: Parser LispVal 
+parseQuasiQuoted :: Parser LispVal
 parseQuasiQuoted = do
   _ <- char '`'
   x <- parseExpr -- technically, should not be an <expression> but a  <qq template>
@@ -76,11 +79,12 @@ stringChar = noneOf "\"" <|> escapeChar
 
 -- exercise 2/3
 escapeChar :: Parser Char
-escapeChar = isoEscapeChar '\\'
-  <|> isoEscapeChar '\"'
-  <|> specialEscapeChar 'n' '\n'
-  <|> specialEscapeChar 'r' '\r'
-  <|> specialEscapeChar 't' '\t'
+escapeChar =
+  isoEscapeChar '\\'
+    <|> isoEscapeChar '\"'
+    <|> specialEscapeChar 'n' '\n'
+    <|> specialEscapeChar 'r' '\r'
+    <|> specialEscapeChar 't' '\t'
 
 isoEscapeChar :: Char -> Parser Char
 isoEscapeChar e = specialEscapeChar e e
@@ -92,11 +96,11 @@ parseAtom :: Parser LispVal
 parseAtom = do
   first <- letter <|> symbol
   rest <- many (letter <|> digit <|> symbol)
-  let atom = first:rest
+  let atom = first : rest
   return $ case atom of
     "#t" -> Bool True
     "#f" -> Bool False
-    _    -> Atom atom
+    _ -> Atom atom
 
 -- TODO support the full number tower, or look up how to do it. I'm confused here.
 
@@ -111,7 +115,7 @@ parseNumber = parseInteger <|> parseFloats -- use try since . also used by dotte
 --
 -- TODO: This only handles x.xxx style inexact floats rn.
 parseFloats :: Parser LispVal
-parseFloats = do 
+parseFloats = do
   preDecimal <- many1 digit
   decimal <- char '.'
   postDecimal <- many1 digit
@@ -120,16 +124,21 @@ parseFloats = do
   return . Float $ float
 
 parseInteger :: Parser LispVal
-parseInteger = (parseBinaryNumber
-  <|> parseOctalNumber
-  <|> parseDecimalNumberWithPrefix
-  <|> parseHexadecimalNumber
-  <|> parseDecimalNumber) <&> Number
+parseInteger =
+  ( parseBinaryNumber
+      <|> parseOctalNumber
+      <|> parseDecimalNumberWithPrefix
+      <|> parseHexadecimalNumber
+      <|> parseDecimalNumber
+  )
+    <&> Number
 
 -- from https://stackoverflow.com/questions/3568767/haskell-lifting-a-reads-function-to-a-parsec-parser
 liftReadS :: ReadS a -> String -> Parser a
-liftReadS reader = maybe (unexpected "no parse") (return . fst) .
-                   find (null . snd) . reader
+liftReadS reader =
+  maybe (unexpected "no parse") (return . fst)
+    . find (null . snd)
+    . reader
 
 parseBinaryNumber :: Parser Integer
 parseBinaryNumber = do
@@ -154,20 +163,21 @@ parseHexadecimalNumber = do
   numSeq <- many1 $ digit <|> oneOf "abcdef"
   liftReadS readHex numSeq
 
-parseDecimalNumber:: Parser Integer
+parseDecimalNumber :: Parser Integer
 parseDecimalNumber = read <$> many1 digit
 
 parseExpr :: Parser LispVal
-parseExpr = parseAtom
-  <|> parseString
-  <|> parseNumber
-  <|> parseChar
-  <|> parseQuoted
-  <|> parseQuasiQuoted
-  <|> parseUnquoted
-  <|> parseUnquoteSplicing
-  <|> parseLists
-  <|> parseVector
+parseExpr =
+  parseAtom
+    <|> parseString
+    <|> parseNumber
+    <|> parseChar
+    <|> parseQuoted
+    <|> parseQuasiQuoted
+    <|> parseUnquoted
+    <|> parseUnquoteSplicing
+    <|> parseLists
+    <|> parseVector
 
 symbol :: Parser Char
 symbol = oneOf "!#$%&|*+-/:<=>?@^_~"

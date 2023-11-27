@@ -1,3 +1,3 @@
-module Ast.Instance (Show)
-where
-import Ast.Instance.Show()
+module Ast.Instance (Show) where
+
+import Ast.Instance.Show ()

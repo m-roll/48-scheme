@@ -1,5 +1,4 @@
-module Ast.Print (showVal, unwordsList)
-where
+module Ast.Print (showVal, unwordsList) where
 
 import Ast.Type
 
