@@ -1,7 +1,8 @@
-module Eval.LispError () where -- shouldnt be tied to eval since parsing errors here too
+module Eval.LispError (LispError (..), ThrowsError, trapError, extractValue) where -- shouldnt be tied to eval since parsing errors here too
 
 import Ast
 import Ast.Print
+import Control.Monad.Except (catchError)
 import Text.Parsec
 
 data LispError
@@ -11,6 +12,7 @@ data LispError
   | BadSpecialForm String LispVal
   | NotFunction String String
   | UnboundVar String String
+  | CaseNotMatched
   | Default String
 
 showError :: LispError -> String
@@ -23,3 +25,10 @@ showError (Parser parseErr) = "Parse error at " ++ show parseErr
 showError (Default err) = err
 
 instance Show LispError where show = showError
+
+type ThrowsError = Either LispError
+
+trapError action = catchError action (return . show)
+
+extractValue :: ThrowsError a -> a
+extractValue (Right val) = val
