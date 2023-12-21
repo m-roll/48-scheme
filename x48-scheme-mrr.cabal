@@ -69,7 +69,8 @@ executable x48-scheme-mrr
                         Ast.Print
                         Eval
                         Eval.LispError
-                        Eval.Coercion   
+                        Eval.Coercion
+                        Repl
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:

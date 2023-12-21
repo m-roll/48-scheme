@@ -1,18 +1,11 @@
-import Ast
 import Control.Monad ()
-import Control.Monad.Except (throwError)
-import Eval
-import Eval.LispError
+import Repl (evalAndPrint, runRepl)
 import System.Environment
-import Text.ParserCombinators.Parsec hiding (spaces)
 
 main :: IO ()
 main = do
   args <- getArgs
-  let evaled = fmap show $ readExpr (head args) >>= eval
-  putStrLn $ extractValue $ trapError evaled
-
-readExpr :: String -> ThrowsError LispVal
-readExpr input = case parse parseExpr "lisp" input of
-  Left err -> throwError $ Parser err
-  Right val -> return val
+  case length args of
+    0 -> runRepl
+    1 -> evalAndPrint $ head args
+    _ -> putStrLn "Program takes only 0 or 1 argument"
