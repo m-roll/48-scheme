@@ -17,11 +17,13 @@ eval _ val@(Number _) = return val
 eval _ val@(Bool _) = return val
 eval _ val@(Float _) = return val
 eval _ val@(Char _) = return val
-eval _ val@(Atom _) = return val
+eval env (Atom id') = getVar env id'
 eval _ val@(Vector _) = return val
 eval _ val@(DottedList _ _) = return val
 eval _ (List [Atom "quote", val]) = return val
 eval env (List [Atom "if", pred', conseq, alt]) = ifSpecialForm env pred' conseq alt
+eval env (List (Atom "case" : rest)) = caseSpecialForm env rest
+eval env (List (Atom "cond" : rest)) = caseSpecialForm env rest
 eval env (List [Atom "define", Atom var, form]) =
   eval env form >>= defineVar env var
 eval env (List (Atom func : args)) = mapM (eval env) args >>= liftThrows . apply func
@@ -84,9 +86,7 @@ primitives =
     ("cons", cons),
     ("eqv?", eqv),
     ("eq?", eqv),
-    ("equal?", equal),
-    ("case", caseP),
-    ("cond", condP)
+    ("equal?", equal)
   ]
 
 makeString :: [LispVal] -> ThrowsError LispVal
@@ -109,10 +109,10 @@ stringFromChars args = do
   return $ String strResult
 
 -- TODO implement `else`
-condP :: [LispVal] -> Env -> ThrowsError LispVal
-condP env = evalCaseP
+condSpecialForm :: Env -> [LispVal] -> IOThrowsError LispVal
+condSpecialForm env = evalCaseP
   where
-    evalCaseP :: [LispVal] -> ThrowsError LispVal
+    evalCaseP :: [LispVal] -> IOThrowsError LispVal
     evalCaseP (List [pred', conseq] : rest) = do
       result <- eval env pred'
       case result of
@@ -122,9 +122,9 @@ condP env = evalCaseP
     evalCaseP (badForm : _) = throwError $ BadSpecialForm "unrecognized case form" badForm
     evalCaseP [] = throwError CaseNotMatched
 
-caseP :: [LispVal] -> ThrowsError LispVal
-caseP (key : allClauses) = do
-  keyResult <- eval key
+caseSpecialForm :: Env -> [LispVal] -> IOThrowsError LispVal
+caseSpecialForm env (key : allClauses) = do
+  keyResult <- eval env key
   let evalExprSeq = undefined
   let checkMatch = foldr ((||) . eqvHelper keyResult) False
   let evalClauses clauses = case clauses of
@@ -136,7 +136,7 @@ caseP (key : allClauses) = do
         (badForm : _) -> throwError $ BadSpecialForm "expected else or case clause" badForm
         [] -> throwError CaseNotMatched
   evalClauses allClauses
-caseP [] = undefined
+caseSpecialForm env [] = undefined
 
 car :: [LispVal] -> ThrowsError LispVal
 car [List (x : _)] = return x

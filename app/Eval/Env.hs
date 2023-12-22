@@ -19,9 +19,8 @@ liftThrows :: ThrowsError a -> IOThrowsError a
 liftThrows (Left err) = throwError err
 liftThrows (Right value) = return value
 
--- this differs from the book. I skip `trapError`. Why?
 runIOThrows :: IOThrowsError String -> IO String
-runIOThrows action = runExceptT action <&> extractValue
+runIOThrows action = runExceptT (trapError action) <&> extractValue
 
 -- END IO plumbing.
 

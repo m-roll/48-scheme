@@ -2,7 +2,7 @@ module Eval.LispError (LispError (..), ThrowsError, trapError, extractValue) whe
 
 import Ast
 import Ast.Print
-import Control.Monad.Except (catchError)
+import Control.Monad.Except (MonadError, catchError)
 import Text.Parsec
 
 data LispError
@@ -29,7 +29,8 @@ instance Show LispError where show = showError
 
 type ThrowsError = Either LispError
 
-trapError :: ThrowsError String -> ThrowsError String
+-- trapError :: ThrowsError String -> ThrowsError String
+trapError :: (MonadError e m, Show e) => m String -> m String
 trapError action = catchError action (return . show)
 
 extractValue :: ThrowsError a -> a
