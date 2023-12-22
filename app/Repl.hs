@@ -35,7 +35,7 @@ until_ pred' prompt action = do
   result <- prompt
   if pred' result
     then return ()
-    else action result >> until_ pred prompt action
+    else action result >> until_ pred' prompt action
 
 runRepl :: IO ()
 runRepl = nullEnv >>= until_ (== "quit") (readPrompt "Lisp>>> ") . evalAndPrint
