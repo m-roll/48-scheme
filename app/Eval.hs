@@ -8,27 +8,32 @@ import Data.Functor ((<&>))
 import Data.Functor.Identity
 import Data.Text (pack, toLower, unpack)
 import Eval.Coercion (Unpacker (AnyUnpacker), unpackBool, unpackChar, unpackEquals, unpackNum, unpackStr)
+import Eval.Env
 import Eval.LispError (LispError (BadSpecialForm, CaseNotMatched, NotFunction, NumArgs, TypeMismatch), ThrowsError)
 
-eval :: LispVal -> ThrowsError LispVal
-eval val@(String _) = return val
-eval val@(Number _) = return val
-eval val@(Bool _) = return val
-eval val@(Float _) = return val
-eval val@(Char _) = return val
-eval val@(Atom _) = return val
-eval val@(Vector _) = return val
-eval val@(DottedList _ _) = return val
-eval (List [Atom "quote", val]) = return val
-eval (List [Atom "if", pred', conseq, alt]) =
-  do
-    result <- eval pred'
-    case result of
-      Bool False -> eval alt
-      Bool True -> eval conseq
-      badArg -> throwError $ TypeMismatch "bool" badArg
-eval (List (Atom func : args)) = mapM eval args >>= apply func
-eval badForm = throwError $ BadSpecialForm "unrecognized special form" badForm
+eval :: Env -> LispVal -> IOThrowsError LispVal
+eval _ val@(String _) = return val
+eval _ val@(Number _) = return val
+eval _ val@(Bool _) = return val
+eval _ val@(Float _) = return val
+eval _ val@(Char _) = return val
+eval _ val@(Atom _) = return val
+eval _ val@(Vector _) = return val
+eval _ val@(DottedList _ _) = return val
+eval _ (List [Atom "quote", val]) = return val
+eval env (List [Atom "if", pred', conseq, alt]) = ifSpecialForm env pred' conseq alt
+eval env (List [Atom "define", Atom var, form]) =
+  eval env form >>= defineVar env var
+eval env (List (Atom func : args)) = mapM (eval env) args >>= liftThrows . apply func
+eval _ badForm = throwError $ BadSpecialForm "unrecognized special form" badForm
+
+ifSpecialForm :: Env -> LispVal -> LispVal -> LispVal -> IOThrowsError LispVal
+ifSpecialForm env pred' conseq alt = do
+  result <- eval env pred'
+  case result of
+    Bool False -> eval env alt
+    Bool True -> eval env conseq
+    badArg -> throwError $ TypeMismatch "bool" badArg
 
 apply :: String -> [LispVal] -> ThrowsError LispVal
 apply func args =
@@ -104,14 +109,14 @@ stringFromChars args = do
   return $ String strResult
 
 -- TODO implement `else`
-condP :: [LispVal] -> ThrowsError LispVal
-condP = evalCaseP
+condP :: [LispVal] -> Env -> ThrowsError LispVal
+condP env = evalCaseP
   where
     evalCaseP :: [LispVal] -> ThrowsError LispVal
     evalCaseP (List [pred', conseq] : rest) = do
-      result <- eval pred'
+      result <- eval env pred'
       case result of
-        Bool True -> eval conseq
+        Bool True -> eval env conseq
         Bool False -> evalCaseP rest
         badArg -> throwError $ TypeMismatch "bool" badArg
     evalCaseP (badForm : _) = throwError $ BadSpecialForm "unrecognized case form" badForm

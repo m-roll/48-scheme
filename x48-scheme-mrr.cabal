@@ -70,6 +70,7 @@ executable x48-scheme-mrr
                         Eval
                         Eval.LispError
                         Eval.Coercion
+                        Eval.Env
                         Repl
 
     -- LANGUAGE extensions used by modules in this package.
