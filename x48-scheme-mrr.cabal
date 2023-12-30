@@ -62,16 +62,19 @@ executable x48-scheme-mrr
     main-is:          Main.hs
 
     -- Modules included in this executable, other than Main.
-    other-modules:	Ast
-                        Ast.Instance
-                        Ast.Type
-                        Ast.Instance.Show
-                        Ast.Print
+    other-modules:	Repl
+                        LispParser
                         Eval
-                        Eval.LispError
+                        Eval.LispVal
                         Eval.Coercion
+                        Eval.LispVal.Instance
+                        Eval.IOThrowsError
                         Eval.Env
-                        Repl
+                        Eval.LispError
+                        Eval.LispError.Instance
+                        Eval.Print
+                        Eval.ThrowsError
+                        Eval.Type
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:

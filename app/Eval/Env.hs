@@ -1,35 +1,17 @@
-module Eval.Env where
+module Eval.Env (Env, NewBinding, nullEnv, isBound, getVar, setVar, defineVar, bindVars) where
 
-import Ast (LispVal)
 import Control.Monad.Except
 import Data.Functor
 import Data.IORef
 import Data.Maybe
+import Eval.IOThrowsError
 import Eval.LispError
-
--- BEGIN IO plumbing
--- Move to another module.
-
-type IOThrowsError = ExceptT LispError IO
-
-nullEnv :: IO Env
-nullEnv = newIORef []
-
-liftThrows :: ThrowsError a -> IOThrowsError a
-liftThrows (Left err) = throwError err
-liftThrows (Right value) = return value
-
-runIOThrows :: IOThrowsError String -> IO String
-runIOThrows action = runExceptT (trapError action) <&> extractValue
-
--- END IO plumbing.
+import Eval.Type
 
 type NewBinding = (String, LispVal)
 
-type EnvBinding = (String, IORef LispVal)
-
--- This type should really be called 'EnvRef'
-type Env = IORef [EnvBinding]
+nullEnv :: IO Env
+nullEnv = newIORef []
 
 isBound :: Env -> String -> IO Bool
 isBound envRef var = readIORef envRef <&> isJust . lookup var

@@ -1,10 +1,13 @@
 module Repl (runRepl, runOne) where
 
-import Ast
 import Control.Monad.Except (throwError)
 import Eval (eval)
 import Eval.Env
+import Eval.IOThrowsError
 import Eval.LispError
+import Eval.LispVal
+import Eval.ThrowsError
+import LispParser
 import System.IO
 import Text.ParserCombinators.Parsec hiding (spaces)
 
