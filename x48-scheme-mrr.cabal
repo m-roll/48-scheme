@@ -70,8 +70,10 @@ executable x48-scheme-mrr
                         Eval.LispVal.Instance
                         Eval.IOThrowsError
                         Eval.Env
+                        Eval.Equality
                         Eval.LispError
                         Eval.LispError.Instance
+                        Eval.Primitives
                         Eval.Print
                         Eval.ThrowsError
                         Eval.Type

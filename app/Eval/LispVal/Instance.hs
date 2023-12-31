@@ -13,8 +13,15 @@ showVal (DottedList head' tail') = "(" ++ unwordsList head' ++ " . " ++ showVal 
 showVal (Char c) = "#\\" ++ [c]
 showVal (Vector v) = "#(" ++ unwordsList v ++ ")"
 showVal (Float f) = show f
-showVal (PrimitiveFunc _) = "#prim"
-showVal (Func {}) = "func"
+showVal (PrimitiveFunc _) = "<primitive>"
+showVal (Func {params = args, vararg = varargs, body = body, closure = env}) =
+  "(lambda ("
+    ++ unwords (map show args)
+    ++ ( case varargs of
+           Nothing -> ""
+           Just arg -> " . " ++ arg
+       )
+    ++ ") ...)"
 
 unwordsList :: [LispVal] -> String
 unwordsList = unwords . map showVal

@@ -6,6 +6,7 @@ import Eval.Env
 import Eval.IOThrowsError
 import Eval.LispError
 import Eval.LispVal
+import Eval.Primitives
 import Eval.ThrowsError
 import LispParser
 import System.IO
@@ -28,10 +29,15 @@ evalString env expr = runIOThrows (fmap show $ liftThrows (readExpr expr) >>= ev
 evalAndPrint :: Env -> String -> IO ()
 evalAndPrint env expr = evalString env expr >>= putStrLn
 
+primitiveBindings :: IO Env
+primitiveBindings = nullEnv >>= flip bindVars (map makePrimitiveFunc primitives)
+  where
+    makePrimitiveFunc (var, func) = (var, PrimitiveFunc func)
+
 -- instead of flipping, it kinda makes more sense to have env as a right param for most functions.
 -- This way the functions can be curried and passed around with fewer changes
 runOne :: String -> IO ()
-runOne expr = nullEnv >>= flip evalAndPrint expr
+runOne expr = primitiveBindings >>= flip evalAndPrint expr
 
 until_ :: Monad m => (a -> Bool) -> m a -> (a -> m ()) -> m ()
 until_ pred' prompt action = do
@@ -41,4 +47,4 @@ until_ pred' prompt action = do
     else action result >> until_ pred' prompt action
 
 runRepl :: IO ()
-runRepl = nullEnv >>= until_ (== "quit") (readPrompt "Lisp>>> ") . evalAndPrint
+runRepl = primitiveBindings >>= until_ (== "quit") (readPrompt "Lisp>>> ") . evalAndPrint
