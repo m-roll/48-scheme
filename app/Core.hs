@@ -67,7 +67,12 @@ evalSpecialForm env "lambda" (DottedList params varargs : body) =
   return $ makeVarArgs varargs env params body
 evalSpecialForm env "lambda" (varargs@(Atom _) : body) =
   return $ makeVarArgs varargs env [] body
+evalSpecialForm env "load" [String filename] =
+  return $ load filename >>= fmap last . mapM (eval env)
 evalSpecialForm _ _ _ = Nothing
+
+load :: String -> IOThrowsError [LispVal]
+load filename = liftIO (readFile filename) >>= liftThrows . readExprList
 
 ifSpecialForm :: Env -> LispVal -> LispVal -> LispVal -> IOThrowsError LispVal
 ifSpecialForm env pred' conseq alt = do

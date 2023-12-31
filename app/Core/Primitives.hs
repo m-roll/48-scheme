@@ -1,7 +1,7 @@
 module Core.Primitives (primitives, ioPrimitives) where
 
 import Control.Monad.Except
-import Core (apply, readExpr, readExprList)
+import Core (apply, load, readExpr)
 import Core.Coercion
 import Core.Equality
 import Core.IOThrowsError
@@ -92,16 +92,13 @@ readProc as = throwError $ NumArgs 1 as
 writeProc :: [LispVal] -> IOThrowsError LispVal
 writeProc [obj] = writeProc [obj, Port stdout]
 writeProc [obj, Port port] = liftIO $ hPrint port obj >> return (Bool True)
-writeProc [obj, notPort] = throwError $ TypeMismatch "port" notPort
+writeProc [_, notPort] = throwError $ TypeMismatch "port" notPort
 writeProc as = throwError $ NumArgs 2 as
 
 readContents :: [LispVal] -> IOThrowsError LispVal
 readContents [String filename] = fmap String . liftIO $ readFile filename
 readContents [notStr] = throwError $ TypeMismatch "string" notStr
 readContents as = throwError $ NumArgs 1 as
-
-load :: String -> IOThrowsError [LispVal]
-load filename = liftIO (readFile filename) >>= liftThrows . readExprList
 
 readAll :: [LispVal] -> IOThrowsError LispVal
 readAll [String fileName] = List <$> load fileName
