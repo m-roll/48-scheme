@@ -1,15 +1,17 @@
-module Eval.Primitives (primitives) where
+module Eval.Primitives (primitives, ioPrimitives) where
 
 import Control.Monad.Except
-import Control.Monad.Identity
+import Core (apply, readExpr, readExprList)
 import Data.Function (on)
 import Data.Functor
 import Data.Text (pack, toLower, unpack)
 import Eval.Coercion
 import Eval.Equality
+import Eval.IOThrowsError
 import Eval.LispError
 import Eval.LispVal
 import Eval.ThrowsError
+import System.IO
 
 primitives :: [(String, [LispVal] -> ThrowsError LispVal)]
 primitives =
@@ -55,6 +57,54 @@ primitives =
     ("eq?", eqv),
     ("equal?", equal)
   ]
+
+ioPrimitives :: [(String, [LispVal] -> IOThrowsError LispVal)]
+ioPrimitives =
+  [ ("apply", applyProc),
+    ("open-input-file", makePort ReadMode),
+    ("open-output-file", makePort WriteMode),
+    ("close-input-port", closePort),
+    ("close-output-port", closePort),
+    ("read", readProc),
+    ("write", writeProc),
+    ("read-contents", readContents),
+    ("read-all", readAll)
+  ]
+
+applyProc :: [LispVal] -> IOThrowsError LispVal
+applyProc [func, List args] = apply func args
+applyProc (func : args) = apply func args
+
+makePort :: IOMode -> [LispVal] -> IOThrowsError LispVal
+makePort mode [String filename] = fmap Port . liftIO $ openFile filename mode
+
+closePort :: [LispVal] -> IOThrowsError LispVal
+closePort [Port port] = liftIO $ hClose port >> return (Bool True)
+closePort [badArg] = throwError $ TypeMismatch "port" badArg
+closePort as = throwError $ NumArgs 1 as
+
+readProc :: [LispVal] -> IOThrowsError LispVal
+readProc [] = readProc [Port stdin]
+readProc [Port port] = liftIO (hGetLine port) >>= liftThrows . readExpr
+readProc [notPort] = throwError $ TypeMismatch "port" notPort
+readProc as = throwError $ NumArgs 1 as
+
+writeProc :: [LispVal] -> IOThrowsError LispVal
+writeProc [obj] = writeProc [obj, Port stdout]
+writeProc [obj, Port port] = liftIO $ hPrint port obj >> return (Bool True)
+writeProc [obj, notPort] = throwError $ TypeMismatch "port" notPort
+writeProc as = throwError $ NumArgs 2 as
+
+readContents :: [LispVal] -> IOThrowsError LispVal
+readContents [String filename] = fmap String . liftIO $ readFile filename
+readContents [notStr] = throwError $ TypeMismatch "string" notStr
+readContents as = throwError $ NumArgs 1 as
+
+load :: String -> IOThrowsError [LispVal]
+load filename = liftIO (readFile filename) >>= liftThrows . readExprList
+
+readAll :: [LispVal] -> IOThrowsError LispVal
+readAll [String fileName] = List <$> load fileName
 
 numericBinop :: (Integer -> Integer -> Integer) -> [LispVal] -> ThrowsError LispVal
 numericBinop _ [] = throwError $ NumArgs 2 []

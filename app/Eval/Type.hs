@@ -1,6 +1,8 @@
-module Eval.Type (LispVal (..), Env, EnvBinding, ThrowsError, LispError (..)) where
+module Eval.Type (LispVal (..), IOThrowsError, Env, EnvBinding, ThrowsError, LispError (..)) where
 
+import Control.Monad.Except
 import Data.IORef
+import System.IO (Handle)
 import Text.Parsec (ParseError)
 
 -- `a' is not in the book. The data definitions are mutually recursive,
@@ -20,6 +22,8 @@ type ThrowsError = Either LispError
 -- Also, we can definitely create an env without using global mutable state. I'm actually not sure this is gonna work gracefully with closures
 type Env = IORef [EnvBinding]
 
+type IOThrowsError = ExceptT LispError IO
+
 data LispVal
   = Atom String
   | List [LispVal]
@@ -32,6 +36,8 @@ data LispVal
   | Vector [LispVal]
   | PrimitiveFunc ([LispVal] -> ThrowsError LispVal)
   | Func {params :: [String], vararg :: Maybe String, body :: [LispVal], closure :: Env}
+  | IOFunc ([LispVal] -> IOThrowsError LispVal)
+  | Port Handle
 
 data LispError
   = NumArgs Integer [LispVal]

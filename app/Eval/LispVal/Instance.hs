@@ -22,6 +22,8 @@ showVal (Func {params = args, vararg = varargs, body = body, closure = env}) =
            Just arg -> " . " ++ arg
        )
     ++ ") ...)"
+showVal (IOFunc _) = "<io primitive>"
+showVal (Port _) = "<port>"
 
 unwordsList :: [LispVal] -> String
 unwordsList = unwords . map showVal

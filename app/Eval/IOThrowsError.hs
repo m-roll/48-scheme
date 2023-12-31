@@ -2,10 +2,9 @@ module Eval.IOThrowsError (IOThrowsError, liftThrows, runIOThrows) where
 
 import Control.Monad.Except
 import Data.Functor
-import Eval.LispError (LispError)
+import Eval.LispError ()
 import Eval.ThrowsError
-
-type IOThrowsError = ExceptT LispError IO
+import Eval.Type (IOThrowsError)
 
 liftThrows :: ThrowsError a -> IOThrowsError a
 liftThrows (Left err) = throwError err

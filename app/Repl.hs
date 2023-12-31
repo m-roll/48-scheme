@@ -1,21 +1,11 @@
 module Repl (runRepl, runOne) where
 
-import Control.Monad.Except (throwError)
-import Eval (eval)
+import Core (eval, readExpr)
 import Eval.Env
 import Eval.IOThrowsError
-import Eval.LispError
 import Eval.LispVal
 import Eval.Primitives
-import Eval.ThrowsError
-import LispParser
 import System.IO
-import Text.ParserCombinators.Parsec hiding (spaces)
-
-readExpr :: String -> ThrowsError LispVal
-readExpr input = case parse parseExpr "lisp" input of
-  Left err -> throwError $ Parser err
-  Right val -> return val
 
 flushStr :: String -> IO ()
 flushStr str = putStr str >> hFlush stdout
@@ -30,14 +20,24 @@ evalAndPrint :: Env -> String -> IO ()
 evalAndPrint env expr = evalString env expr >>= putStrLn
 
 primitiveBindings :: IO Env
-primitiveBindings = nullEnv >>= flip bindVars (map makePrimitiveFunc primitives)
+primitiveBindings =
+  nullEnv
+    >>= flip
+      bindVars
+      allPrimatives
   where
-    makePrimitiveFunc (var, func) = (var, PrimitiveFunc func)
+    makePrimitiveFunc constructor (var, func) = (var, constructor func)
+    allPrimatives =
+      fmap (makePrimitiveFunc PrimitiveFunc) primitives
+        ++ fmap (makePrimitiveFunc IOFunc) ioPrimitives
 
 -- instead of flipping, it kinda makes more sense to have env as a right param for most functions.
 -- This way the functions can be curried and passed around with fewer changes
-runOne :: String -> IO ()
-runOne expr = primitiveBindings >>= flip evalAndPrint expr
+runOne :: [String] -> IO ()
+runOne args = do
+  env <- primitiveBindings >>= flip bindVars [("args", List $ map String $ drop 1 args)]
+  runIOThrows (show <$> eval env (List [Atom "load", String (head args)]))
+    >>= hPutStrLn stderr
 
 until_ :: Monad m => (a -> Bool) -> m a -> (a -> m ()) -> m ()
 until_ pred' prompt action = do

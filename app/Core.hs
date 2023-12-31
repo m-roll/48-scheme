@@ -1,16 +1,26 @@
-module Eval where
+module Core where
 
-import Control.Monad ()
-import Control.Monad.Except (liftIO, throwError)
-import Control.Monad.Identity ()
-import Data.Maybe (isNothing)
-import Eval.Env (Env, bindVars, defineVar, getVar, setVar)
-import Eval.Equality (eqvHelper)
-import Eval.IOThrowsError (IOThrowsError, liftThrows)
+import Control.Monad.Except
+import Data.Maybe
+import Eval.Env
+import Eval.Equality
+import Eval.IOThrowsError
 import Eval.LispError
 import Eval.LispVal
+import Eval.ThrowsError
+import LispParser
+import Text.ParserCombinators.Parsec hiding (spaces)
 
--- There are some really cool generalizations that we can do here.
+readOrThrow :: Parser a -> String -> ThrowsError a
+readOrThrow parser input = case parse parser "lisp" input of
+  Left err -> throwError $ Parser err
+  Right val -> return val
+
+readExpr :: String -> ThrowsError LispVal
+readExpr = readOrThrow parseExpr
+
+readExprList :: String -> ThrowsError [LispVal]
+readExprList = readOrThrow (endBy parseExpr spaces)
 
 eval :: Env -> LispVal -> IOThrowsError LispVal
 eval env (Atom id') = getVar env id'
@@ -23,7 +33,22 @@ eval env (List (id'@(Atom name) : rest)) =
       apply fn argVals
 eval _ val = return val
 
--- TODO: this should return some special form specification which gets run in `eval'
+apply :: LispVal -> [LispVal] -> IOThrowsError LispVal
+apply (Func params varargs body closure) args =
+  if num params /= num args && isNothing varargs
+    then throwError $ NumArgs (num params) args
+    else liftIO (bindVars closure $ zip params args) >>= bindVarArgs varargs >>= evalBody
+  where
+    remainingArgs = drop (length params) args
+    num = toInteger . length
+    evalBody env = last <$> mapM (eval env) body
+    bindVarArgs arg env = case arg of
+      Just argName -> liftIO $ bindVars env [(argName, List remainingArgs)]
+      Nothing -> return env
+apply (PrimitiveFunc func) args = liftThrows $ func args
+apply (IOFunc func) args = func args
+apply badType _ = throwError $ TypeMismatch "function or primitive" badType
+
 evalSpecialForm :: Env -> String -> [LispVal] -> Maybe (IOThrowsError LispVal)
 evalSpecialForm _ "quote" [val] = return $ return val
 evalSpecialForm env "if" [pred', conseq, alt] = return $ ifSpecialForm env pred' conseq alt
@@ -51,21 +76,6 @@ ifSpecialForm env pred' conseq alt = do
     Bool False -> eval env alt
     Bool True -> eval env conseq
     badArg -> throwError $ TypeMismatch "bool" badArg
-
-apply :: LispVal -> [LispVal] -> IOThrowsError LispVal
-apply (Func params varargs body closure) args =
-  if num params /= num args && isNothing varargs
-    then throwError $ NumArgs (num params) args
-    else liftIO (bindVars closure $ zip params args) >>= bindVarArgs varargs >>= evalBody
-  where
-    remainingArgs = drop (length params) args
-    num = toInteger . length
-    evalBody env = last <$> mapM (eval env) body
-    bindVarArgs arg env = case arg of
-      Just argName -> liftIO $ bindVars env [(argName, List remainingArgs)]
-      Nothing -> return env
-apply (PrimitiveFunc func) args = liftThrows $ func args
-apply badType _ = throwError $ TypeMismatch "function or primitive" badType
 
 -- TODO implement `else`
 condSpecialForm :: Env -> [LispVal] -> IOThrowsError LispVal

@@ -4,7 +4,6 @@ import Control.Monad.Except
 import Data.Functor
 import Data.IORef
 import Data.Maybe
-import Eval.IOThrowsError
 import Eval.LispError
 import Eval.Type
 

@@ -1,4 +1,4 @@
-module LispParser (parseExpr) where
+module LispParser (parseExpr, spaces) where
 
 import Control.Monad ()
 import Data.Functor
