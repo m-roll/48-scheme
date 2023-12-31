@@ -1,13 +1,13 @@
 module Core where
 
 import Control.Monad.Except
+import Core.Env
+import Core.Equality
+import Core.IOThrowsError
+import Core.LispError
+import Core.LispVal
+import Core.ThrowsError
 import Data.Maybe
-import Eval.Env
-import Eval.Equality
-import Eval.IOThrowsError
-import Eval.LispError
-import Eval.LispVal
-import Eval.ThrowsError
 import LispParser
 import Text.ParserCombinators.Parsec hiding (spaces)
 

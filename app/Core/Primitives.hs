@@ -1,16 +1,16 @@
-module Eval.Primitives (primitives, ioPrimitives) where
+module Core.Primitives (primitives, ioPrimitives) where
 
 import Control.Monad.Except
 import Core (apply, readExpr, readExprList)
+import Core.Coercion
+import Core.Equality
+import Core.IOThrowsError
+import Core.LispError
+import Core.LispVal
+import Core.ThrowsError
 import Data.Function (on)
 import Data.Functor
 import Data.Text (pack, toLower, unpack)
-import Eval.Coercion
-import Eval.Equality
-import Eval.IOThrowsError
-import Eval.LispError
-import Eval.LispVal
-import Eval.ThrowsError
 import System.IO
 
 primitives :: [(String, [LispVal] -> ThrowsError LispVal)]

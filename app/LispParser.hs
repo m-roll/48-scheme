@@ -1,9 +1,9 @@
 module LispParser (parseExpr, spaces) where
 
 import Control.Monad ()
+import Core.LispVal
 import Data.Functor
 import Data.List
-import Eval.LispVal
 import Numeric
 import Text.Parsec.Char hiding (spaces)
 import Text.ParserCombinators.Parsec hiding (spaces)

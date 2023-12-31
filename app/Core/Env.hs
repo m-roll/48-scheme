@@ -1,11 +1,11 @@
-module Eval.Env (Env, NewBinding, nullEnv, isBound, getVar, setVar, defineVar, bindVars) where
+module Core.Env (Env, NewBinding, nullEnv, isBound, getVar, setVar, defineVar, bindVars) where
 
 import Control.Monad.Except
+import Core.LispError
+import Core.Type
 import Data.Functor
 import Data.IORef
 import Data.Maybe
-import Eval.LispError
-import Eval.Type
 
 type NewBinding = (String, LispVal)
 

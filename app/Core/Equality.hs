@@ -1,11 +1,11 @@
-module Eval.Equality (eqv, equal, eqvHelper) where
+module Core.Equality (eqv, equal, eqvHelper) where
 
 import Control.Monad.Except
 import Control.Monad.Identity
-import Eval.Coercion
-import Eval.LispError
-import Eval.LispVal
-import Eval.ThrowsError
+import Core.Coercion
+import Core.LispError
+import Core.LispVal
+import Core.ThrowsError
 
 eqv :: [LispVal] -> ThrowsError LispVal
 eqv [arg1, arg2] = return . Bool $ eqvHelper arg1 arg2

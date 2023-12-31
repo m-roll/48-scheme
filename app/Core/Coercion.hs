@@ -1,11 +1,11 @@
 {-# LANGUAGE ExistentialQuantification #-}
 
-module Eval.Coercion (Unpacker (AnyUnpacker), unpackEquals, unpackNum, unpackBool, unpackStr, unpackChar) where
+module Core.Coercion (Unpacker (AnyUnpacker), unpackEquals, unpackNum, unpackBool, unpackStr, unpackChar) where
 
 import Control.Monad.Except (catchError, throwError)
-import Eval.LispError (LispError (..))
-import Eval.LispVal
-import Eval.ThrowsError
+import Core.LispError (LispError (..))
+import Core.LispVal
+import Core.ThrowsError
 
 data Unpacker = forall a. Eq a => AnyUnpacker (LispVal -> ThrowsError a)
 
@@ -18,7 +18,7 @@ unpackEquals arg1 arg2 (AnyUnpacker unpacker) =
     `catchError` const (return False)
 
 unpackNum :: LispVal -> ThrowsError Integer
-unpackNum v = u v
+unpackNum = u
   where
     u (Number n) = return n
     u (String n) =
@@ -30,13 +30,13 @@ unpackNum v = u v
     u notNum = throwError . TypeMismatch "number" $ notNum
 
 unpackBool :: LispVal -> ThrowsError Bool
-unpackBool v = u v
+unpackBool = u
   where
     u (Bool b) = return b
     u notBool = throwError . TypeMismatch "bool" $ notBool
 
 unpackStr :: LispVal -> ThrowsError String
-unpackStr v = u v
+unpackStr = u
   where
     u (String s) = return s
     u (Number n) = return $ show n
@@ -44,7 +44,7 @@ unpackStr v = u v
     u notStr = throwError . TypeMismatch "string" $ notStr
 
 unpackChar :: LispVal -> ThrowsError Char
-unpackChar v = u v
+unpackChar = u
   where
     u (Char c) = return c
     u notChar = throwError . TypeMismatch "char" $ notChar

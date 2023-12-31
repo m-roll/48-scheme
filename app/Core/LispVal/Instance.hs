@@ -1,6 +1,6 @@
-module Eval.LispVal.Instance (Show) where
+module Core.LispVal.Instance (Show) where
 
-import Eval.Type
+import Core.Type
 
 showVal :: LispVal -> String
 showVal (String contents) = "\"" ++ contents ++ "\""
@@ -14,7 +14,7 @@ showVal (Char c) = "#\\" ++ [c]
 showVal (Vector v) = "#(" ++ unwordsList v ++ ")"
 showVal (Float f) = show f
 showVal (PrimitiveFunc _) = "<primitive>"
-showVal (Func {params = args, vararg = varargs, body = body, closure = env}) =
+showVal (Func {params = args, vararg = varargs}) =
   "(lambda ("
     ++ unwords (map show args)
     ++ ( case varargs of

@@ -1,7 +1,7 @@
-module Eval.ThrowsError (ThrowsError, trapError, extractValue) where
+module Core.ThrowsError (ThrowsError, trapError, extractValue) where
 
 import Control.Monad.Except
-import Eval.Type (LispError)
+import Core.Type (LispError)
 
 type ThrowsError = Either LispError
 

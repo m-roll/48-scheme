@@ -1,4 +1,4 @@
-module Eval.Type (LispVal (..), IOThrowsError, Env, EnvBinding, ThrowsError, LispError (..)) where
+module Core.Type (LispVal (..), IOThrowsError, Env, EnvBinding, ThrowsError, LispError (..)) where
 
 import Control.Monad.Except
 import Data.IORef

@@ -1,10 +1,10 @@
 module Repl (runRepl, runOne) where
 
 import Core (eval, readExpr)
-import Eval.Env
-import Eval.IOThrowsError
-import Eval.LispVal
-import Eval.Primitives
+import Core.Env
+import Core.IOThrowsError
+import Core.LispVal
+import Core.Primitives
 import System.IO
 
 flushStr :: String -> IO ()

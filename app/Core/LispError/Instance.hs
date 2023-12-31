@@ -1,8 +1,8 @@
-module Eval.LispError.Instance (Show) where
+module Core.LispError.Instance (Show) where
 
-import Eval.LispVal ()
-import Eval.Print
-import Eval.Type
+import Core.LispVal ()
+import Core.Print
+import Core.Type
 
 showError :: LispError -> String
 showError (UnboundVar message varname) = message ++ ": " ++ varname

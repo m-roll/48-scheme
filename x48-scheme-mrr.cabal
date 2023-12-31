@@ -64,18 +64,18 @@ executable x48-scheme-mrr
     -- Modules included in this executable, other than Main.
     other-modules:	Repl
                         LispParser
-                        Eval.LispVal
-                        Eval.Coercion
-                        Eval.LispVal.Instance
-                        Eval.Env
-                        Eval.Equality
-                        Eval.IOThrowsError
-                        Eval.LispError
-                        Eval.LispError.Instance
-                        Eval.Primitives
-                        Eval.Print
-                        Eval.ThrowsError
-                        Eval.Type
+                        Core.LispVal
+                        Core.Coercion
+                        Core.LispVal.Instance
+                        Core.Env
+                        Core.Equality
+                        Core.IOThrowsError
+                        Core.LispError
+                        Core.LispError.Instance
+                        Core.Primitives
+                        Core.Print
+                        Core.ThrowsError
+                        Core.Type
                         Core
 
     -- LANGUAGE extensions used by modules in this package.
