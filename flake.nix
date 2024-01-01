@@ -1,16 +1,25 @@
 {
-  inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-23.05";
-  outputs = { self, nixpkgs }: {
-    devShell."x86_64-linux" =
-      with import nixpkgs { system = "x86_64-linux"; };
-      pkgs.mkShell {
+  inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+  outputs = { self, nixpkgs }: 
+  let 
+     system = "x86_64-linux";
+     pkgs' = nixpkgs.legacyPackages.${system};
+     out = pkgs'.haskellPackages.callCabal2nix "48-scheme" "${self}" { };
+   in {
+    devShells.${system}.default =
+      pkgs'.mkShell {
         buildInputs = [
-          ghc
-	  git # need this or cabal may fail. annoying.
-	  cabal-install
-	  cabal2nix
-	  haskell-language-server
+          pkgs'.ghc
+	  pkgs'.gitMinimal # need this or cabal may fail. annoying.
+	  pkgs'.cabal-install
+	  pkgs'.cabal2nix
+	  pkgs'.haskell-language-server
 	];
       };
+    packages.${system}.default = out;
+    apps.${system}.default = {
+      type = "app";
+      program =  "${out}/bin/x48-scheme-mrr";
+    };
   };
 }
